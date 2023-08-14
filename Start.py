@@ -20,6 +20,7 @@ import xlrd
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.workbook import Workbook
 import xlwt
+from func_pptx import presentation_pptx_shops_graphic, presentation_pptx_ferst
 
 print('Начало работы')
 
@@ -58,7 +59,7 @@ for cellObj in sheet['A1':last_coordinate.coordinate]:
                             else:
                                 shop_dict[int(number)] = []
                                 shop_dict[int(number)].append(i_index)
-                                shop = Shop(f'{number} Краснодар')
+                                shop = Shop(f'Краснодар {number} ')
                                 shop_class_dict[int(number)] = shop
                                 shop_class_dict.get(int(number)).index_shop_list.append(i_index)
 
@@ -112,7 +113,7 @@ for cellObj in sheet['A1':last_coordinate.coordinate]:
                                             sheet_analize_LFL.write(key, count, sheet.cell(row=i_row, column=j_index).value)
                                             sheet_analize_LFL.write(key, count - 2,
                                                                     sheet.cell(row=i_row, column=j_index + 1).value)
-        analize.save("анализ продаж.xlsx")
+        analize.save("анализ продаж.xls")
         break
 
 
@@ -128,24 +129,7 @@ for cellObj in sheet['A1':last_coordinate.coordinate]:
 #print(shop_class_dict[2].index_shop_list)
 
 
-slide = Presentation("Продажи 1 квартал  Краснодар.pptx")
-file = open('text.txt', 'w')
-for i_slide in slide.slides:
-    for shape in i_slide.shapes:
-        print(shape)
-        #help(shape)
-        if not shape.has_text_frame:
-            continue
-        for paragraph in shape.text_frame.paragraphs:
-            for rus in paragraph.runs:
-                print(rus.text)
-        #if not shape.XL_CHART_TYPE.COLUMS_CLUSTRED:
-            #continue
-        #for r in shape.XL_CHART_TYPE.COLUMS_CLUSTRED:
-            #print(r)
-        #if not shape.categorias:
-            #continue
-        #for categorias in shape.categorias:
-            #print(categorias)
-                #file.write(rus)
-file.close()
+
+a = 'анализ продаж.xlsx'
+presentation_pptx_ferst(a)
+presentation_pptx_shops_graphic(a)
