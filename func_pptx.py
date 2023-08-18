@@ -12,6 +12,7 @@ import aspose.slides as slides
 import aspose.pydrawing as drawing
 from pptx.enum.chart import XL_LABEL_POSITION
 from pptx.enum.chart import XL_LEGEND_POSITION
+from pptx.enum.text import  MSO_AUTO_SIZE
 import xlrd
 a = 'анализ продаж.xlsx'
 b = 'Анализ продаж по кварталам.pptx'
@@ -77,7 +78,7 @@ def presentation_pptx_shops_graphic(file_name_xls = '', file_name_pptx = ''):
         slide = p.slides.add_slide(ferst_slide)
         s = p.slide_width
         print(s)
-        slide.shapes.title.text = f'Продажи к сравнению\n{mount_title[0]}'
+        slide.shapes.title.text = f'Продажи к сравнению в рублях\n{mount_title[0]}'
         #slide.placeholders[1].text = f'Продажи к сравнению\n' \
         #                              f'{mount_title}'
         # define chart data ---------------------
@@ -86,6 +87,11 @@ def presentation_pptx_shops_graphic(file_name_xls = '', file_name_pptx = ''):
         last_year_value = []
         current_year_value = []
         procent_year = []
+        summ_last_year_rub = []
+        summ_current_year_rub = []
+        summ_last_year_weight = []
+        summ_current_year_weight = []
+
         for i_shop in range(1, row_sh):
             value_cell = sheets_xls.cell(i_shop, 0).value
             if value_cell != '' and value_cell != 'Магазин':
@@ -94,18 +100,33 @@ def presentation_pptx_shops_graphic(file_name_xls = '', file_name_pptx = ''):
                 if i == 1:
                     #print(sheets_xls.cell(i_shop, 1).value)
                     #print(sheets_xls.cell(i_shop, 2).value)
-                    last_year_value.append(sheets_xls.cell(i_shop, 1).value)
-                    current_year_value.append(sheets_xls.cell(i_shop, 2).value)
-                    if isinstance(sheets_xls.cell(i_shop, 1).value, int or float) and isinstance(sheets_xls.cell(i_shop, 2).value, int or float):
-                        procent_year.append(sheets_xls.cell(i_shop, 1).value / sheets_xls.cell(i_shop, 2).value * 100)
+                    if isinstance(sheets_xls.cell(i_shop, 1).value, float):
+                        last_year_value.append(sheets_xls.cell(i_shop, 1).value)
+                    else:
+                        last_year_value.append(0)
+                    if isinstance(sheets_xls.cell(i_shop, 2).value, float):
+                        current_year_value.append(sheets_xls.cell(i_shop, 2).value)
+                    else:
+                        current_year_value.append(0)
+                    if isinstance(sheets_xls.cell(i_shop, 1).value, float) and isinstance(sheets_xls.cell(i_shop, 2).value, float):
+                        procent_year.append(round((100 - (sheets_xls.cell(i_shop, 1).value / sheets_xls.cell(i_shop, 2).value * 100)), 2))
+                    else:
+                        procent_year.append(0)
                 else:
                     a1 = sheets_xls.cell(i_shop, (i * 4)-3).value
                     a = sheets_xls.cell(i_shop, (i * 4)-2).value
-
-                    last_year_value.append(sheets_xls.cell(i_shop, (i * 4)-3).value)
-                    current_year_value.append(sheets_xls.cell(i_shop, (i * 4)-2).value)
+                    if isinstance(a1, float):
+                        last_year_value.append(sheets_xls.cell(i_shop, (i * 4)-3).value)
+                    else:
+                        last_year_value.append(0)
+                    if isinstance(a, float):
+                        current_year_value.append(sheets_xls.cell(i_shop, (i * 4)-2).value)
+                    else:
+                        current_year_value.append(0)
                     if isinstance(a1, float) and isinstance(a, float):
                         procent_year.append(round(100 - (sheets_xls.cell(i_shop, (i * 4)-3).value / sheets_xls.cell(i_shop, (i * 4)-2).value * 100), 2))
+                    else:
+                        procent_year.append(0)
             print(shop_list)
             print(last_year_value)
             print(current_year_value)
@@ -115,6 +136,11 @@ def presentation_pptx_shops_graphic(file_name_xls = '', file_name_pptx = ''):
         chart_data.add_series(last_year, (tuple(last_year_value)))
         chart_data.add_series(year, (tuple(current_year_value)))
         chart_data.add_series('%', (tuple(procent_year)))
+
+        summ_last_year_rub.append(sum(last_year_value))
+        summ_current_year_rub.append(sum(current_year_value))
+
+
 
         x, y, cx, cy = Inches(0.01), Inches(2), Inches(15), Inches(4.5)
         graphic_frame = slide.shapes.add_chart(
@@ -130,6 +156,166 @@ def presentation_pptx_shops_graphic(file_name_xls = '', file_name_pptx = ''):
         chart.has_legend = True
         chart.legend.position = XL_LEGEND_POSITION.RIGHT
         chart.legend.include_in_layout = False
+
+        """
+        Создание слайда с продажами вес
+        
+        """
+
+        p.slide_width = Inches(15)
+        ferst_slide = p.slide_layouts[5]
+
+        # help(ferst_slide)
+        slide = p.slides.add_slide(ferst_slide)
+        s = p.slide_width
+        print(s)
+        slide.shapes.title.text = f'Продажи к сравнению вес\n{mount_title[0]}'
+        # slide.placeholders[1].text = f'Продажи к сравнению\n' \
+        #                              f'{mount_title}'
+        # define chart data ---------------------
+        chart_data = ChartData()
+        shop_list = []
+        last_year_value = []
+        current_year_value = []
+        procent_year = []
+        for i_shop in range(3, row_sh):
+            value_cell = sheets_xls.cell(i_shop, 0).value
+            if value_cell != '' and value_cell != 'Магазин':
+                shop_list.append(sheets_xls.cell(i_shop, 0).value)
+                print(sheets_xls.cell(i_shop, 0).value)
+                if i == 3:
+                    print(sheets_xls.cell(i_shop, 3).value)
+                    print(sheets_xls.cell(i_shop, 4).value)
+
+                    if isinstance(sheets_xls.cell(i_shop, 3).value, float):
+                        last_year_value.append(sheets_xls.cell(i_shop, 3).value)
+                    else:
+                        last_year_value.append(0)
+                    if isinstance (sheets_xls.cell(i_shop, 4).value, float):
+                        current_year_value.append(sheets_xls.cell(i_shop, 4).value)
+                    else:
+                        current_year_value.append(0)
+                    if isinstance(sheets_xls.cell(i_shop, 3).value, float) and isinstance(
+                            sheets_xls.cell(i_shop, 4).value, float):
+                        procent_year.append(
+                            round((100 - (sheets_xls.cell(i_shop, 3).value / sheets_xls.cell(i_shop, 4).value * 100)),
+                                  2))
+                    else:
+                        procent_year.append(0)
+                else:
+                    a1 = sheets_xls.cell(i_shop, (i * 4) - 1).value
+                    a = sheets_xls.cell(i_shop, (i * 4)).value
+                    if isinstance(a1, float):
+                        last_year_value.append(sheets_xls.cell(i_shop, (i * 4) - 1).value)
+                    else:
+                        last_year_value.append(0)
+                    if isinstance(a, float):
+                        current_year_value.append(sheets_xls.cell(i_shop, (i * 4)).value)
+                    else:
+                        current_year_value.append(0)
+                    if isinstance(a1, float) and isinstance(a, float):
+                        procent_year.append(round(100 - (
+                                    sheets_xls.cell(i_shop, (i * 4) - 1).value / sheets_xls.cell(i_shop, (
+                                        i * 4)).value * 100), 2))
+                    else:
+                        procent_year.append(0)
+            print(shop_list)
+            print(last_year_value)
+            print(current_year_value)
+            print(procent_year)
+
+        chart_data.categories = shop_list
+        chart_data.add_series(last_year, (tuple(last_year_value)))
+        chart_data.add_series(year, (tuple(current_year_value)))
+        chart_data.add_series('%', (tuple(procent_year)))
+
+        summ_last_year_weight.append(sum(last_year_value))
+        summ_current_year_weight.append(sum(current_year_value))
+
+        x, y, cx, cy = Inches(0.01), Inches(2), Inches(15), Inches(4.5)
+        graphic_frame = slide.shapes.add_chart(
+            XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data)
+        chart = graphic_frame.chart
+        plot = chart.plots[0]
+        plot.has_data_labels = True
+        data_labels = plot.data_labels
+
+        data_labels.font.size = Pt(13)
+        data_labels.font.color.rgb = RGBColor(0x0A, 0x42, 0x80)
+        data_labels.position = XL_LABEL_POSITION.INSIDE_END
+        chart.has_legend = True
+        chart.legend.position = XL_LEGEND_POSITION.RIGHT
+        chart.legend.include_in_layout = False
+        """
+        Создание слайда с общими показателями за месяц
+        """
+        p.slide_width = Inches(15)
+        ferst_slide = p.slide_layouts[5]
+
+        # help(ferst_slide)
+        slide = p.slides.add_slide(ferst_slide)
+        s = p.slide_width
+        print(s)
+        slide.shapes.title.text = f'\n                Продажи к сравнению                  \nв киллограмах                               в рублях'
+
+        slide.shapes.title.width = Inches(14)
+        # slide.placeholders[1].text = f'Продажи к сравнению\n' \
+        #                              f'{mount_title}'
+        # define chart data ---------------------
+        chart_data = ChartData()
+
+        summ_procent_year_rub = []
+        procent = round(100 - summ_last_year_rub[0] / summ_current_year_rub[0] * 100, 1)
+        summ_procent_year_rub.append(procent)
+
+        chart_data.categories = ['в рублях']
+        chart_data.add_series(last_year, tuple(summ_last_year_rub))
+        chart_data.add_series(year, tuple(summ_current_year_rub))
+        chart_data.add_series('%', tuple(summ_procent_year_rub))
+
+
+
+        x, y, cx, cy = Inches(1), Inches(2), Inches(6), Inches(4.5)
+        graphic_frame = slide.shapes.add_chart(
+            XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data)
+        chart = graphic_frame.chart
+        plot = chart.plots[0]
+        plot.has_data_labels = True
+        data_labels = plot.data_labels
+
+        data_labels.font.size = Pt(13)
+        data_labels.font.color.rgb = RGBColor(0x0A, 0x42, 0x80)
+        data_labels.position = XL_LABEL_POSITION.INSIDE_END
+        chart.has_legend = True
+        chart.legend.position = XL_LEGEND_POSITION.RIGHT
+        chart.legend.include_in_layout = False
+
+        chart_data_weight = ChartData()
+
+        summ_procent_year_weight = []
+        procent = round(100 - summ_last_year_weight[0] / summ_current_year_weight[0] * 100, 1)
+        summ_procent_year_weight.append(procent)
+
+        chart_data_weight.categories = ['В килkограмах']
+        chart_data_weight.add_series(last_year, tuple(summ_last_year_weight))
+        chart_data_weight.add_series(year, tuple(summ_current_year_weight))
+        chart_data_weight.add_series('%', tuple(summ_procent_year_weight))
+
+        x, y, cx, cy = Inches(9), Inches(2), Inches(6), Inches(4.5)
+        graphic_frame = slide.shapes.add_chart(
+            XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data_weight)
+        chart = graphic_frame.chart
+        plot = chart.plots[0]
+        plot.has_data_labels = True
+        data_labels = plot.data_labels
+
+        data_labels.font.size = Pt(13)
+        data_labels.font.color.rgb = RGBColor(0x0A, 0x42, 0x80)
+        data_labels.position = XL_LABEL_POSITION.INSIDE_END
+        chart.has_legend = True
+        chart.legend.position = XL_LEGEND_POSITION.RIGHT
+        chart.legend.include_in_layout = False
+
         p.save('chart-01.pptx')
 
 
